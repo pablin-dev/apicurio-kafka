@@ -1,0 +1,514 @@
+syntax = "proto2";
+
+package google.protobuf;
+
+option java_package = "com.google.protobuf";
+option java_outer_classname = "DescriptorProtos";
+option java_multiple_files = true;
+option go_package = "google.golang.org/protobuf/types/descriptorpb";
+option objc_class_prefix = "GPB";
+
+// The descriptor for a file.
+message FileDescriptorSet {
+  repeated FileDescriptorProto file = 1;
+}
+
+// Describes a .proto file.
+message FileDescriptorProto {
+  // file name, relative to root of source tree
+  optional string name = 1;
+  // e.g. "foo", "foo.bar", etc.
+  optional string package = 2;
+  // Names of files imported by this file.
+  repeated string dependency = 3;
+  // Indexes of the public imported files in the dependency list above.
+  repeated int32 public_dependency = 10;
+  // Indexes of the weak imported files in the dependency list.
+  // For Google-internal use only.
+  repeated int32 weak_dependency = 11;
+
+  // All top-level definitions in this file.
+  repeated DescriptorProto message_type = 4;
+  repeated EnumDescriptorProto enum_type = 5;
+  repeated ServiceDescriptorProto service = 6;
+  repeated FieldDescriptorProto extension = 7;
+
+  optional FileOptions options = 8;
+
+  // This field contains optional information about the original source code.
+  // You may safely ignore this field if you're only interested in parsing the
+  // final result.
+  optional SourceCodeInfo source_code_info = 9;
+
+  // The syntax of the file.
+  // The descriptor set should have a version number that specifies
+  // which version of the descriptor can be parsed.
+  optional string syntax = 12;
+
+  // The source code image of this file.
+  // This is optional since it's only meant to be used for the
+  // `protoc-gen-debug` plugin.
+  optional bytes source_code = 13;
+}
+
+// Describes a message type.
+message DescriptorProto {
+  optional string name = 1;
+  repeated FieldDescriptorProto field = 2;
+  repeated FieldDescriptorProto extension = 6;
+  repeated DescriptorProto nested_type = 3;
+  repeated EnumDescriptorProto enum_type = 4;
+  repeated ExtensionRange extension_range = 5;
+  repeated OneofDescriptorProto oneof_decl = 8;
+  optional MessageOptions options = 7;
+  repeated ReservedRange reserved_range = 9;
+  repeated string reserved_name = 10;
+
+  message ExtensionRange {
+    optional int32 start = 1;
+    optional int32 end = 2;
+    optional ExtensionRangeOptions options = 3;
+  }
+
+  message ReservedRange {
+    optional int32 start = 1;
+    optional int32 end = 2;
+  }
+}
+
+// Describes a field within a message.
+message FieldDescriptorProto {
+  enum Type {
+    // 0 is reserved for errors.
+    // Order is weird for historical reasons.
+    TYPE_DOUBLE = 1;
+    TYPE_FLOAT = 2;
+    // Not ZigZag encoded.  Negative numbers take 10 bytes.  Use TYPE_SINT64 if
+    // negative numbers are common.
+    TYPE_INT64 = 3;
+    TYPE_UINT64 = 4;
+    // Not ZigZag encoded.  Negative numbers take 10 bytes.  Use TYPE_SINT32 if
+    // negative numbers are common.
+    TYPE_INT32 = 5;
+    TYPE_FIXED64 = 6;
+    TYPE_FIXED32 = 7;
+    TYPE_BOOL = 8;
+    TYPE_STRING = 9;
+    // New in version 2.
+    TYPE_GROUP = 10;
+    TYPE_MESSAGE = 11;
+    TYPE_BYTES = 12;
+    TYPE_UINT32 = 13;
+    TYPE_ENUM = 14;
+    TYPE_SFIXED32 = 15;
+    TYPE_SFIXED64 = 16;
+    TYPE_SINT32 = 17;
+    TYPE_SINT64 = 18;
+  }
+
+  enum Label {
+    // 0 is reserved for errors
+    LABEL_OPTIONAL = 1;
+    LABEL_REQUIRED = 2;
+    LABEL_REPEATED = 3;
+  }
+
+  optional string name = 1;
+  optional int32 number = 3;
+  optional Label label = 4;
+  optional Type type = 5;
+  // If type_name is set, this need to be a message name or an enum name.
+  // If the name starts with '.', it is fully-qualified.
+  optional string type_name = 6;
+  // For message and enum types, this is the name of the type in .proto file,
+  // e.g. "Foo", "pkg.Foo", "outer.Inner.Foo", etc.
+  // It is the name of the message or enum type within the same file.
+  // For types in other files, it is the fully-qualified name.
+  // This field is used when building the full name of the field type
+  // using all the information in the FileDescriptorSet.
+  // It is not used for type inference.
+  optional string extendee = 2;
+  // For extensions, this is the name of the message type being extended.
+  optional string default_value = 7;
+  // For numeric types, contains the text representation of the default value.
+  // For enums, contains the name of the default value.
+  // For strings, contains the default string value.
+  // For bytes, contains the escaped byte sequence.
+  optional FieldOptions options = 8;
+
+  // If set true, then this field is a proto3 "optional".
+  // When a proto3 field is optional, it has the semantics of proto2 optional fields.
+  // In particular, it can be set and checked for presence.
+  // When a proto3 field is not optional, it has no presence information.
+  // For more details, see https://protobuf.dev/programming-guides/proto3/#optional
+  optional bool proto3_optional = 9;
+}
+
+// Describes a oneof.
+message OneofDescriptorProto {
+  optional string name = 1;
+  optional OneofOptions options = 2;
+}
+
+// Describes an enum type.
+message EnumDescriptorProto {
+  optional string name = 1;
+  repeated EnumValueDescriptorProto value = 2;
+  optional EnumOptions options = 3;
+  repeated ReservedRange reserved_range = 4;
+  repeated string reserved_name = 5;
+
+  message EnumReservedRange {
+    optional int32 start = 1;
+    optional int32 end = 2;
+  }
+}
+
+// Describes a value within an enum.
+message EnumValueDescriptorProto {
+  optional string name = 1;
+  optional int32 number = 2;
+  optional EnumValueOptions options = 3;
+}
+
+// Describes a service.
+message ServiceDescriptorProto {
+  optional string name = 1;
+  repeated MethodDescriptorProto method = 2;
+  optional ServiceOptions options = 3;
+}
+
+// Describes a method of a service.
+message MethodDescriptorProto {
+  optional string name = 1;
+  // Input and output type names.  These are fully-qualified to
+  // provide context to parser of this descriptor.
+  optional string input_type = 2;
+  optional string output_type = 3;
+  optional MethodOptions options = 4;
+
+  // Identifies if client streams a sequence of requests to the server.
+  optional bool client_streaming = 5 [default = false];
+  // Identifies if server streams a sequence of responses to the client.
+  optional bool server_streaming = 6 [default = false];
+}
+
+// ===================================================================
+// Options
+
+// Each of the definitions above may have "options" attached.  These are
+// just arbitrary pieces of information that the code generator can use to
+// customize the generated code, or for other applications to parse.
+message FileOptions {
+  // Sets the Java package where classes generated from this .proto will be
+  // placed.  By default, this is the proto package with "proto" removed.
+  // Example:  package foo.bar.baz;
+  //           option java_package = "com.example.foo.bar.baz";
+  optional string java_package = 1;
+  // If set true, then the Java code generator will generate a separate .java
+  // file for each top-level message, enum, and service defined in the input
+  // .proto file.  By default, only one .java file is generated for the entire
+  // .proto file, and all top-level definitions are nested inside a single
+  // outer class.
+  optional bool java_multiple_files = 10;
+  // Sets the Java class name which all top-level definitions in the input
+  // .proto file are nested inside.  By default, this class name is generated
+  // from the .proto file name by converting to CamelCase and appending "Proto".
+  // Example:  file `foo_bar.proto`, Java class `FooBarProto`.
+  optional string java_outer_classname = 9;
+  // If set true, then the Java code generator will generate equals() and
+  // hashCode() methods for all messages defined in the input .proto file.
+  // Default is false.  This option only affects Java code.
+  optional bool java_generate_equals_and_hash = 20 [deprecated=true];
+  // If set true, then the Java code generator will generate code that
+  // doesn't use any depreciated methods.  Default is false.
+  // This option only affects Java code.
+  optional bool java_safe_ubyte_sequence_serialization = 21 [deprecated=true];
+  // If set true, then the Go code generator will generate a separate .pb.go
+  // file for each top-level message, enum, and service defined in the input
+  // .proto file.  By default, only one .pb.go file is generated for the entire
+  // .proto file, and all top-level definitions are nested inside a single
+  // outer class.
+  optional bool java_use_deprecated_codegen = 22 [deprecated=true];
+  // Is this file deprecated?
+  // Depending on the target platform, this can emit Deprecated annotations
+  // for the file, or generate code warnings.
+  optional bool deprecated = 23 [deprecated=true];
+  // This option is only ignored.
+  // Do not use.
+  optional bool java_string_check_utf8 = 24 [deprecated=true];
+  // If set true, then the Kotlin code generator will generate a separate .kt
+  // file for each top-level message, enum, and service defined in the input
+  // .proto file.
+  optional bool kotlin_generate_jvm_field_name = 25 [deprecated=true];
+  // If set true, then the Objective-C code generator will generate a separate
+  // .pbobjc.h/.pbobjc.m file for each top-level message, enum, and service
+  // defined in the input .proto file.
+  optional string objc_class_prefix = 36;
+  // Sets the Go package where classes generated from this .proto will be
+  // placed.  By default, this is the proto package with "proto" removed.
+  // Example:  package foo.bar.baz;
+  //           option go_package = "example.com/foo/bar/baz";
+  optional string go_package = 47;
+  // Should generic services be generated in each language?  "Enable this only
+  // for Google-internal projects that generate code for original proto2
+  // RPC systems."
+  optional bool cc_generic_services = 16 [default = false];
+  optional bool java_generic_services = 17 [default = false];
+  optional bool py_generic_services = 18 [default = false];
+  optional bool php_generic_services = 42 [default = false];
+  optional bool csharp_generic_services = 33 [default = false];
+  // Is this file an old style proto2 file? Please do not use in new code.
+  // It is used to generate the correct code for old proto2 files.
+  optional bool deprecated_legacy_json_field_conflicts = 48 [deprecated=true];
+  // Is this file an old style proto2 file? Please do not use in new code.
+  // It is used to generate the correct code for old proto2 files.
+  optional bool enable_experimental_json_encoding = 50 [deprecated=true];
+  // If true, this .proto file is replaced by an optimized implementation in
+  // the runtime.
+  // This option is intended to be used by the protobuf runtime only.
+  // Users should not set this option.
+  optional bool optimize_for = 9 [default = SPEED];
+
+  enum OptimizeMode {
+    // Generate code for speed.
+    SPEED = 1;
+    // Generate code for size.
+    CODE_SIZE = 2;
+    // Generate code for lite runtime.
+    LITE_RUNTIME = 3;
+  }
+
+  // Options for parsing proto text format.
+  optional string php_class_prefix = 40;
+  optional string php_namespace = 41;
+  optional string php_metadata_namespace = 44;
+  optional string ruby_package = 45;
+  optional string csharp_namespace = 37;
+  optional string swift_prefix = 39;
+  optional string json_format = 51 [deprecated=true];
+  optional string feature_set = 52 [deprecated=true];
+  optional string features = 53 [deprecated=true];
+
+  // The parser stores options it doesn't recognize here.
+  // The code generator may use this.
+  map<int32, string> uninterpreted_option = 999;
+}
+
+message MessageOptions {
+  // Set true to use the old message encoding for (a subset of) Google's
+  // internal well-known types.
+  // It is intended to be used by the protobuf runtime only.
+  // Users should not set this option.
+  optional bool message_set_wire_format = 1 [default = false];
+  // Set true to generate a message that works in the lite runtime.
+  // This is a short-cut for `optimize_for = LITE_RUNTIME`.
+  // It is intended to be used by the protobuf runtime only.
+  // Users should not set this option.
+  optional bool no_standard_descriptor_accessor = 2 [default = false];
+  // Is this message deprecated?
+  // Depending on the target platform, this can emit Deprecated annotations
+  // for the message, or generate code warnings.
+  optional bool deprecated = 3 [default = false];
+  // Whether the message is an aggregate value type, like `Duration`, `Timestamp`.
+  optional bool map_entry = 7;
+  // The parser stores options it doesn't recognize here.
+  // The code generator may use this.
+  map<int32, string> uninterpreted_option = 999;
+  optional ExtensionRangeOptions extension_range_options = 1071;
+}
+
+message FieldOptions {
+  // The field is a packed repeated field.
+  optional bool ctype = 1 [default = STRING];
+
+  enum CType {
+    // Default mode for strings and bytes fields.
+    STRING = 0;
+    // Generate C++ string_view or Java ByteString instead of string.
+    CORD = 1;
+    // Use an experimental C++ string_view type for all string fields.
+    STRING_PIECE = 2;
+  }
+
+  // The field is a packed repeated field.
+  optional bool packed = 2;
+  // The field is a deprecated field.
+  optional bool jstype = 3 [default = JS_NORMAL];
+
+  enum JSType {
+    // Use the default type.
+    JS_NORMAL = 0;
+    // Use JavaScript string for 64-bit integer fields.
+    JS_STRING = 1;
+    // Use JavaScript Number for 64-bit integer fields.
+    JS_NUMBER = 2;
+  }
+
+  // If this field is deprecated.
+  optional bool lazy = 4 [default = false];
+  // Is this field deprecated?
+  // Depending on the target platform, this can emit Deprecated annotations
+  // for the field, or generate code warnings.
+  optional bool deprecated = 5 [default = false];
+  // Controls the optimization in `cc/java/python` generated code for this field.
+  // Only for Google-internal use.
+  optional bool weak = 10 [default = false];
+  // The parser stores options it doesn't recognize here.
+  // The code generator may use this.
+  map<int32, string> uninterpreted_option = 999;
+  optional bool retain_data_for_unrecognized_fields = 1071;
+  optional bool debug_redact = 1072;
+  optional bool json_name = 1073;
+}
+
+message OneofOptions {
+  // The parser stores options it doesn't recognize here.
+  // The code generator may use this.
+  map<int32, string> uninterpreted_option = 999;
+}
+
+message ExtensionRangeOptions {
+  // The parser stores options it doesn't recognize here.
+  // The code generator may use this.
+  map<int32, string> uninterpreted_option = 999;
+}
+
+message EnumOptions {
+  // Set true to use the old message encoding for (a subset of) Google's
+  // internal well-known types.
+  // It is intended to be used by the protobuf runtime only.
+  // Users should not set this option.
+  optional bool allow_alias = 2 [default = false];
+  // Is this enum deprecated?
+  // Depending on the target platform, this can emit Deprecated annotations
+  // for the enum, or generate code warnings.
+  optional bool deprecated = 3 [default = false];
+  // The parser stores options it doesn't recognize here.
+  // The code generator may use this.
+  map<int32, string> uninterpreted_option = 999;
+}
+
+message EnumValueOptions {
+  // Is this enum value deprecated?
+  // Depending on the target platform, this can emit Deprecated annotations
+  // for the enum value, or generate code warnings.
+  optional bool deprecated = 1 [default = false];
+  // The parser stores options it doesn't recognize here.
+  // The code generator may use this.
+  map<int32, string> uninterpreted_option = 999;
+}
+
+message ServiceOptions {
+  // Is this service deprecated?
+  // Depending on the target platform, this can emit Deprecated annotations
+  // for the service, or generate code warnings.
+  optional bool deprecated = 3 [default = false];
+  // The parser stores options it doesn't recognize here.
+  // The code generator may use this.
+  map<int32, string> uninterpreted_option = 999;
+}
+
+message MethodOptions {
+  // Is this method deprecated?
+  // Depending on the target platform, this can emit Deprecated annotations
+  // for the method, or generate code warnings.
+  optional bool deprecated = 3 [default = false];
+  // The parser stores options it doesn't recognize here.
+  // The code generator may use this.
+  map<int32, string> uninterpreted_option = 999;
+
+  // The parser stores options it doesn't recognize here.
+  // The code generator may use this.
+  optional .google.protobuf.MethodOptions idempotency_level = 31 [deprecated=true];
+
+  enum IdempotencyLevel {
+    IDEMPOTENCY_UNKNOWN = 0;
+    NO_SIDE_EFFECTS = 1;
+    IDEMPOTENT = 2;
+  }
+}
+
+// ===================================================================
+// Source Code Information
+
+// Encapsulates information about the original source file from which a
+// FileDescriptorProto was generated.
+message SourceCodeInfo {
+  // A Location identifies a piece of source code in the .proto file which
+  // corresponds to a particular definition.  This is useful for clients who
+  // want to display file content with highlighted syntax or other features.
+  message Location {
+    // Identifies the entity represented by this Location.  This is a sequence
+    // of integers forming a path to the identifier. For example, given a
+    // file `foo.proto`:
+    //   message Foo {
+    //     message Bar {
+    //       enum Baz {
+    //         // bzl
+    //         BAZ_VALUE = 1;
+    //       }
+    //     }
+    //   }
+    // The path for `Foo` is `4, 0`. The path for `Bar` is `4, 0, 2, 0`. The path for
+    // `Baz` is `4, 0, 2, 0, 5, 0`. The path for `BAZ_VALUE` is `4, 0, 2, 0, 5, 0, 2, 0`.
+    //
+    // The algorithm is simple:
+    //  * Each number represents a field number or an index in a repeated field.
+    //  * A field number within a message relates to that message's definition.
+    //  * An index in a repeated field refers to the "nth" entry in that field.
+    //
+    // For example, in the case of `Foo`, `4` corresponds to the `message_type` field.
+    // The `0` means this is the first `message_type` entry.
+    //
+    // The `Path` field contains the list of integer field numbers or
+    // indices in the order that they appear in the object.
+    repeated int32 path = 1 [packed=true];
+
+    // Always has exactly three or four elements: start line, start column,
+    // end line (inclusive), end column (exclusive).
+    repeated int32 span = 2 [packed=true];
+
+    // If this Location represents a field, this is the text that appears before
+    // the field in the .proto file.
+    optional string leading_comments = 3;
+    // If this Location represents a field, this is the text that appears after
+    // the field in the .proto file.
+    optional string trailing_comments = 4;
+    // If this Location represents a field, this is a sequence of leading
+    // detached comments.  These are comments that are not attached to any
+    // field and are not a part of any of the `span` blocks.
+    repeated string leading_detached_comments = 6;
+  }
+
+  repeated Location location = 1;
+}
+
+// ===================================================================
+// Annotations
+
+// A custom option that can be attached to any of the proto definitions.
+// It is used to provide extra information to the code generator.
+message GeneratedCodeInfo {
+  // A file is considered to have generated code if it contains at least one
+  // `GeneratedCodeInfo.Annotation` in the FileDescriptorSet.
+  message Annotation {
+    // Identifies the entity represented by this Annotation.
+    repeated int32 path = 1 [packed=true];
+
+    // The name of the code generator that generated this annotation.
+    // This is optional and should be used to provide context about what generated
+    // the code.
+    optional string source_file = 2;
+
+    // The annotation message.
+    // The type of this message is determined by the `source_file` field.
+    optional string begin = 3;
+
+    // The annotation message.
+    // The type of this message is determined by the `source_file` field.
+    optional string end = 4;
+  }
+
+  repeated Annotation annotation = 1;
+}

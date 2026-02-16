@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package level2;
+
+import "level1/msg1.proto";
+
+message Message2 {
+  string value2 = 1;
+  level1.Message1 nested_message1 = 2;
+}

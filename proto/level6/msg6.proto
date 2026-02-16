@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package level6;
+
+import "level5/msg5.proto";
+import "buf/validate/validate.proto"; // Assuming this is the correct import path for bufbuild/protovalidate
+
+message Message6 {
+  string name = 1 [(buf.validate.field).string.min_len = 3];
+  level5.Message5 nested_msg5 = 2;
+}
